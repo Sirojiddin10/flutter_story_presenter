@@ -29,6 +29,7 @@ typedef OnAudioLoaded = void Function(AudioPlayer);
 typedef CustomViewBuilder = Widget Function(AudioPlayer);
 typedef OnSlideDown = void Function(DragUpdateDetails);
 typedef OnSlideStart = void Function(DragStartDetails);
+typedef DescriptionWidgetBuilder = Widget Function(String description);
 
 class FlutterStoryPresenter extends StatefulWidget {
   const FlutterStoryPresenter({
@@ -101,7 +102,7 @@ class FlutterStoryPresenter extends StatefulWidget {
   final bool useBorderRadius;
   final BorderRadiusGeometry? borderRadius;
   final Gradient? topGradient;
-  final Widget? descriptionWidget;
+  final DescriptionWidgetBuilder? descriptionWidget;
 
   @override
   State<FlutterStoryPresenter> createState() => _FlutterStoryPresenterState();
@@ -634,7 +635,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
                   bottom: 12,
                   left: 12,
                   right: 12,
-                  child: widget.descriptionWidget!,
+                  child: widget.descriptionWidget!(currentItem.description!),
                 )
               },
               if (widget.headerWidget != null) ...{
