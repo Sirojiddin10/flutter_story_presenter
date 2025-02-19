@@ -17,6 +17,7 @@ class StoryItem {
     this.webConfig,
     this.customWidget,
     this.audioConfig,
+    this.description,
   })  : assert(
           storyItemType == StoryItemType.custom || url != null,
           'URL is required when storyItemType is not custom',
@@ -36,8 +37,7 @@ class StoryItem {
   final Widget? errorWidget;
 
   /// Custom Widget to display fully instead of any other view
-  final Widget? Function(FlutterStoryController?, AudioPlayer? audioPlayer)?
-      customWidget;
+  final Widget? Function(FlutterStoryController?, AudioPlayer? audioPlayer)? customWidget;
 
   final StoryItemType storyItemType;
 
@@ -64,4 +64,6 @@ class StoryItem {
 
   /// Applicable when [storyItemType] is [StoryItemType.web]
   final StoryViewWebConfig? webConfig;
+
+  final String? description;
 }

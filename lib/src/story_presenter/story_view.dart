@@ -50,6 +50,7 @@ class FlutterStoryPresenter extends StatefulWidget {
     this.useBorderRadius = false,
     this.borderRadius,
     this.topGradient,
+    this.descriptionWidget,
     super.key,
   }) : assert(initialIndex < items.length);
 
@@ -100,6 +101,7 @@ class FlutterStoryPresenter extends StatefulWidget {
   final bool useBorderRadius;
   final BorderRadiusGeometry? borderRadius;
   final Gradient? topGradient;
+  final Widget? descriptionWidget;
 
   @override
   State<FlutterStoryPresenter> createState() => _FlutterStoryPresenterState();
@@ -417,6 +419,8 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     }
   }
 
+  bool _readMore = false;
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -625,6 +629,14 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
                   ),
                 ),
               ),
+              if (currentItem.description != null && widget.descriptionWidget != null) ...{
+                Positioned(
+                  bottom: 12,
+                  left: 12,
+                  right: 12,
+                  child: widget.descriptionWidget!,
+                )
+              },
               if (widget.headerWidget != null) ...{
                 Align(
                   alignment: Alignment.topCenter,

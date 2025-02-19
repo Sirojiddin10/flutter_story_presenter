@@ -48,6 +48,7 @@ class _HomeState extends State<Home> {
           imageConfig: StoryViewImageConfig(
             fit: BoxFit.cover,
           ),
+          description: 'Yoshlarning ilmiy va innovatsion faoliyatini qoʻllab-quvvatlash, gaz taʼminoti sohasida samaradorlikka erishish hamda startap loyihalarni rivojlantirish maqsadida tashkil etilgan “Eng yaxshi ilmiy ishlanma” startap loyihalar tanlovining yakuniy bosqichi oʻz yakuniga yetdi. Natijalar 10 kun muddatda “Hududgaztaʼminot” AJning rasmiy veb-sayti va kanallarida eʼlon qilinadi.',
           url: "https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800",
         ),
         // StoryItem(
