@@ -2,19 +2,21 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_story_presenter/src/story_presenter/story_border_clipper.dart';
 import 'package:flutter_story_presenter/src/story_presenter/story_custom_view_wrapper.dart';
 import 'package:just_audio/just_audio.dart';
-import '../story_presenter/story_view_indicator.dart';
+import 'package:video_player/video_player.dart';
+
+import '../controller/flutter_story_controller.dart';
 import '../models/story_item.dart';
 import '../models/story_view_indicator_config.dart';
-import '../controller/flutter_story_controller.dart';
 import '../story_presenter/image_story_view.dart';
+import '../story_presenter/story_view_indicator.dart';
+import '../story_presenter/text_story_view.dart';
 import '../story_presenter/video_story_view.dart';
 import '../story_presenter/web_story_view.dart';
-import '../story_presenter/text_story_view.dart';
 import '../utils/smooth_video_progress.dart';
 import '../utils/story_utils.dart';
-import 'package:video_player/video_player.dart';
 
 typedef OnStoryChanged = void Function(int);
 typedef OnCompleted = Future<void> Function();
@@ -45,6 +47,9 @@ class FlutterStoryPresenter extends StatefulWidget {
     this.footerWidget,
     this.onSlideDown,
     this.onSlideStart,
+    this.useBorderRadius = false,
+    this.borderRadius,
+    this.topGradient,
     super.key,
   }) : assert(initialIndex < items.length);
 
@@ -92,6 +97,9 @@ class FlutterStoryPresenter extends StatefulWidget {
 
   /// Widget to display text field or other content at the bottom of the screen.
   final Widget? footerWidget;
+  final bool useBorderRadius;
+  final BorderRadiusGeometry? borderRadius;
+  final Gradient? topGradient;
 
   @override
   State<FlutterStoryPresenter> createState() => _FlutterStoryPresenterState();
@@ -186,9 +194,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
       }
     }
 
-    if (jumpIndex != null &&
-        jumpIndex >= 0 &&
-        jumpIndex < widget.items.length) {
+    if (jumpIndex != null && jumpIndex >= 0 && jumpIndex < widget.items.length) {
       currentIndex = jumpIndex - 1;
       _playNext();
     }
@@ -244,15 +250,13 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
         _animationController?.duration = v;
 
-        _currentProgressAnimation =
-            Tween<double>(begin: 0, end: 1).animate(_animationController!)
-              ..addListener(animationListener)
-              ..addStatusListener(animationStatusListener);
+        _currentProgressAnimation = Tween<double>(begin: 0, end: 1).animate(_animationController!)
+          ..addListener(animationListener)
+          ..addStatusListener(animationStatusListener);
 
         _animationController!.forward();
       });
-      _audioDurationSubscriptionStream =
-          _audioPlayer?.positionStream.listen(audioPositionListener);
+      _audioDurationSubscriptionStream = _audioPlayer?.positionStream.listen(audioPositionListener);
       _audioPlayerStateStream = _audioPlayer?.playerStateStream.listen(
         (event) {
           if (event.playing) {
@@ -272,13 +276,11 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
       vsync: this,
     );
 
-    _animationController?.duration =
-        _currentVideoPlayer?.value.duration ?? currentItem.duration;
+    _animationController?.duration = _currentVideoPlayer?.value.duration ?? currentItem.duration;
 
-    _currentProgressAnimation =
-        Tween<double>(begin: 0, end: 1).animate(_animationController!)
-          ..addListener(animationListener)
-          ..addStatusListener(animationStatusListener);
+    _currentProgressAnimation = Tween<double>(begin: 0, end: 1).animate(_animationController!)
+      ..addListener(animationListener)
+      ..addStatusListener(animationStatusListener);
 
     _animationController!.forward();
   }
@@ -347,17 +349,14 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   /// Plays the next story item.
   void _playNext() async {
-    if (widget.items.length == 1 &&
-        _currentVideoPlayer != null &&
-        widget.restartOnCompleted) {
+    if (widget.items.length == 1 && _currentVideoPlayer != null && widget.restartOnCompleted) {
       await widget.onCompleted?.call();
 
       /// In case of story length 1 with video, we won't initialise,
       /// instead we will loop the video
       return;
     }
-    if (_currentVideoPlayer != null &&
-        currentIndex != (widget.items.length - 1)) {
+    if (_currentVideoPlayer != null && currentIndex != (widget.items.length - 1)) {
       /// Dispose the video player only in case of multiple story
       _currentVideoPlayer?.removeListener(videoListener);
       _currentVideoPlayer?.dispose();
@@ -421,191 +420,220 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    return Stack(
+    return Column(
       children: [
-        if (currentItem.thumbnail != null) ...{
-          currentItem.thumbnail!,
-        },
-        if (currentItem.storyItemType.isCustom &&
-            currentItem.customWidget != null) ...{
-          Positioned.fill(
-            child: StoryCustomWidgetWrapper(
-              isAutoStart: true,
-              key: UniqueKey(),
-              builder: (audioPlayer) {
-                return currentItem.customWidget!(
-                        widget.flutterStoryController, audioPlayer) ??
-                    const SizedBox.shrink();
+        SizedBox(
+          height: MediaQuery.of(context).padding.top,
+        ),
+        Expanded(
+          child: Stack(
+            children: [
+              if (currentItem.thumbnail != null) ...{
+                currentItem.thumbnail!,
               },
-              storyItem: currentItem,
-              onLoaded: () {
-                isCurrentItemLoaded = true;
-                _startStoryCountdown();
+              if (currentItem.storyItemType.isCustom && currentItem.customWidget != null) ...{
+                Positioned.fill(
+                  child: StoryBorderClipper(
+                    useBorderRadius: widget.useBorderRadius,
+                    borderRadius: widget.borderRadius,
+                    child: StoryCustomWidgetWrapper(
+                      isAutoStart: true,
+                      key: UniqueKey(),
+                      builder: (audioPlayer) {
+                        return currentItem.customWidget!(widget.flutterStoryController, audioPlayer) ??
+                            const SizedBox.shrink();
+                      },
+                      storyItem: currentItem,
+                      onLoaded: () {
+                        isCurrentItemLoaded = true;
+                        _startStoryCountdown();
+                      },
+                      onAudioLoaded: (audioPlayer) {
+                        isCurrentItemLoaded = true;
+                        _audioPlayer = audioPlayer;
+                        _startStoryCountdown();
+                      },
+                    ),
+                  ),
+                ),
+              },
+              if (currentItem.storyItemType.isImage) ...{
+                Positioned.fill(
+                  child: StoryBorderClipper(
+                    borderRadius: widget.borderRadius,
+                    useBorderRadius: widget.useBorderRadius,
+                    child: ImageStoryView(
+                      key: ValueKey('$currentIndex'),
+                      storyItem: currentItem,
+                      onImageLoaded: (isLoaded) {
+                        isCurrentItemLoaded = isLoaded;
+                        _startStoryCountdown();
+                      },
+                      onAudioLoaded: (audioPlayer) {
+                        _audioPlayer = audioPlayer;
+                        isCurrentItemLoaded = true;
 
+                        _startStoryCountdown();
+                      },
+                    ),
+                  ),
+                ),
               },
-              onAudioLoaded: (audioPlayer) {
-                isCurrentItemLoaded = true;
-                _audioPlayer = audioPlayer;
-                _startStoryCountdown();
-
+              if (currentItem.storyItemType.isVideo) ...{
+                Positioned.fill(
+                  child: StoryBorderClipper(
+                    borderRadius: widget.borderRadius,
+                    useBorderRadius: widget.useBorderRadius,
+                    child: VideoStoryView(
+                      storyItem: currentItem,
+                      key: ValueKey('$currentIndex'),
+                      looping: widget.items.length == 1 && widget.restartOnCompleted,
+                      onVideoLoad: (videoPlayer) {
+                        isCurrentItemLoaded = true;
+                        _currentVideoPlayer = videoPlayer;
+                        widget.onVideoLoad?.call(videoPlayer);
+                        _startStoryCountdown();
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      },
+                    ),
+                  ),
+                ),
               },
-            ),
-          ),
-        },
-        if (currentItem.storyItemType.isImage) ...{
-          Positioned.fill(
-            child: ImageStoryView(
-              key: ValueKey('$currentIndex'),
-              storyItem: currentItem,
-              onImageLoaded: (isLoaded) {
-                isCurrentItemLoaded = isLoaded;
-                _startStoryCountdown();
+              if (currentItem.storyItemType.isWeb) ...{
+                Positioned.fill(
+                  child: StoryBorderClipper(
+                    borderRadius: widget.borderRadius,
+                    useBorderRadius: widget.useBorderRadius,
+                    child: WebStoryView(
+                      storyItem: currentItem,
+                      key: ValueKey('$currentIndex'),
+                      onWebViewLoaded: (controller, loaded) {
+                        isCurrentItemLoaded = loaded;
+                        if (loaded) {
+                          _startStoryCountdown();
+                        }
+                        currentItem.webConfig?.onWebViewLoaded?.call(controller, loaded);
+                      },
+                    ),
+                  ),
+                ),
               },
-              onAudioLoaded: (audioPlayer) {
-                _audioPlayer = audioPlayer;
-                isCurrentItemLoaded = true;
-
-                _startStoryCountdown();
+              if (currentItem.storyItemType.isText) ...{
+                Positioned.fill(
+                  child: StoryBorderClipper(
+                    borderRadius: widget.borderRadius,
+                    useBorderRadius: widget.useBorderRadius,
+                    child: TextStoryView(
+                      storyItem: currentItem,
+                      key: ValueKey('$currentIndex'),
+                      onTextStoryLoaded: (loaded) {
+                        isCurrentItemLoaded = loaded;
+                        _startStoryCountdown();
+                      },
+                      onAudioLoaded: (audioPlayer) {
+                        isCurrentItemLoaded = true;
+                        _audioPlayer = audioPlayer;
+                        _startStoryCountdown();
+                      },
+                    ),
+                  ),
+                ),
               },
-            ),
-          ),
-        },
-        if (currentItem.storyItemType.isVideo) ...{
-          Positioned.fill(
-            child: VideoStoryView(
-              storyItem: currentItem,
-              key: ValueKey('$currentIndex'),
-              looping: widget.items.length == 1 && widget.restartOnCompleted,
-              onVideoLoad: (videoPlayer) {
-                isCurrentItemLoaded = true;
-                _currentVideoPlayer = videoPlayer;
-                widget.onVideoLoad?.call(videoPlayer);
-                _startStoryCountdown();
-                if (mounted) {
-                  setState(() {});
-                }
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: widget.topGradient,
+                  ),
+                  height: 82,
+                ),
+              ),
+              Positioned(
+                top: 12,
+                left: 16,
+                right: 16,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _currentVideoPlayer != null
+                        ? SmoothVideoProgress(
+                            controller: _currentVideoPlayer!,
+                            builder: (context, progress, duration, child) {
+                              return StoryViewIndicator(
+                                currentIndex: currentIndex,
+                                currentItemAnimatedValue: progress.inMilliseconds / duration.inMilliseconds,
+                                totalItems: widget.items.length,
+                                storyViewIndicatorConfig: storyViewIndicatorConfig,
+                              );
+                            })
+                        : _animationController != null
+                            ? AnimatedBuilder(
+                                animation: _animationController!,
+                                builder: (context, child) => StoryViewIndicator(
+                                  currentIndex: currentIndex,
+                                  currentItemAnimatedValue: currentItemProgress,
+                                  totalItems: widget.items.length,
+                                  storyViewIndicatorConfig: storyViewIndicatorConfig,
+                                ),
+                              )
+                            : StoryViewIndicator(
+                                currentIndex: currentIndex,
+                                currentItemAnimatedValue: currentItemProgress,
+                                totalItems: widget.items.length,
+                                storyViewIndicatorConfig: storyViewIndicatorConfig,
+                              ),
+                  ],
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  width: size.width * .2,
+                  height: size.height,
+                  child: GestureDetector(
+                    onTap: _playPrevious,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(
+                  width: size.width * .2,
+                  height: size.height,
+                  child: GestureDetector(
+                    onTap: _playNext,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(
+                  width: size.width,
+                  height: size.height,
+                  child: GestureDetector(
+                    key: ValueKey('$currentIndex'),
+                    onLongPressDown: (details) => _pauseMedia(),
+                    onLongPressUp: _resumeMedia,
+                    onLongPressEnd: (details) => _resumeMedia(),
+                    onLongPressCancel: _resumeMedia,
+                    onVerticalDragStart: widget.onSlideStart?.call,
+                    onVerticalDragUpdate: widget.onSlideDown?.call,
+                  ),
+                ),
+              ),
+              if (widget.headerWidget != null) ...{
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: widget.headerWidget!,
+                ),
               },
-            ),
-          ),
-        },
-        if (currentItem.storyItemType.isWeb) ...{
-          Positioned.fill(
-            child: WebStoryView(
-              storyItem: currentItem,
-              key: ValueKey('$currentIndex'),
-              onWebViewLoaded: (controller, loaded) {
-                isCurrentItemLoaded = loaded;
-                if (loaded) {
-                  _startStoryCountdown();
-                }
-                currentItem.webConfig?.onWebViewLoaded
-                    ?.call(controller, loaded);
-              },
-            ),
-          ),
-        },
-        if (currentItem.storyItemType.isText) ...{
-          Positioned.fill(
-            child: TextStoryView(
-              storyItem: currentItem,
-              key: ValueKey('$currentIndex'),
-              onTextStoryLoaded: (loaded) {
-                isCurrentItemLoaded = loaded;
-                _startStoryCountdown();
-              },
-              onAudioLoaded: (audioPlayer) {
-                isCurrentItemLoaded = true;
-                _audioPlayer = audioPlayer;
-                _startStoryCountdown();
-              },
-            ),
-          ),
-        },
-        Align(
-          alignment: storyViewIndicatorConfig.alignment,
-          child: Padding(
-            padding: storyViewIndicatorConfig.margin,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _currentVideoPlayer != null
-                    ? SmoothVideoProgress(
-                        controller: _currentVideoPlayer!,
-                        builder: (context, progress, duration, child) {
-                          return StoryViewIndicator(
-                            currentIndex: currentIndex,
-                            currentItemAnimatedValue: progress.inMilliseconds /
-                                duration.inMilliseconds,
-                            totalItems: widget.items.length,
-                            storyViewIndicatorConfig: storyViewIndicatorConfig,
-                          );
-                        })
-                    : _animationController != null
-                        ? AnimatedBuilder(
-                            animation: _animationController!,
-                            builder: (context, child) => StoryViewIndicator(
-                              currentIndex: currentIndex,
-                              currentItemAnimatedValue: currentItemProgress,
-                              totalItems: widget.items.length,
-                              storyViewIndicatorConfig:
-                                  storyViewIndicatorConfig,
-                            ),
-                          )
-                        : StoryViewIndicator(
-                            currentIndex: currentIndex,
-                            currentItemAnimatedValue: currentItemProgress,
-                            totalItems: widget.items.length,
-                            storyViewIndicatorConfig: storyViewIndicatorConfig,
-                          ),
-              ],
-            ),
+            ],
           ),
         ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: size.width * .2,
-            height: size.height,
-            child: GestureDetector(
-              onTap: _playPrevious,
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: SizedBox(
-            width: size.width * .2,
-            height: size.height,
-            child: GestureDetector(
-              onTap: _playNext,
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: SizedBox(
-            width: size.width,
-            height: size.height,
-            child: GestureDetector(
-              key: ValueKey('$currentIndex'),
-              onLongPressDown: (details) => _pauseMedia(),
-              onLongPressUp: _resumeMedia,
-              onLongPressEnd: (details) => _resumeMedia(),
-              onLongPressCancel: _resumeMedia,
-              onVerticalDragStart: widget.onSlideStart?.call,
-              onVerticalDragUpdate: widget.onSlideDown?.call,
-            ),
-          ),
-        ),
-        if (widget.headerWidget != null) ...{
-          Align(
-            alignment: Alignment.topCenter,
-            child: SafeArea(
-                bottom: storyViewIndicatorConfig.enableBottomSafeArea,
-                top: storyViewIndicatorConfig.enableTopSafeArea,
-                child: widget.headerWidget!),
-          ),
-        },
         if (widget.footerWidget != null) ...{
           Align(
             alignment: Alignment.bottomCenter,

@@ -24,35 +24,31 @@ class StoryViewIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: storyViewIndicatorConfig.enableBottomSafeArea,
-      top: storyViewIndicatorConfig.enableTopSafeArea,
-      child: Row(
-        children: [
-          for (var i = 0; i < totalItems; i++) ...{
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: storyViewIndicatorConfig.horizontalGap,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.all(
-                      Radius.circular(storyViewIndicatorConfig.borderRadius)),
-                  child: LinearProgressIndicator(
-                    minHeight: storyViewIndicatorConfig.height,
-                    value: i == currentIndex ? currentItemAnimatedValue : 0,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        storyViewIndicatorConfig.activeColor),
-                    backgroundColor: i < currentIndex
-                        ? storyViewIndicatorConfig.backgroundCompletedColor
-                        : storyViewIndicatorConfig.backgroundDisabledColor,
-                  ),
+    return Row(
+      children: [
+        for (var i = 0; i < totalItems; i++) ...{
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: storyViewIndicatorConfig.horizontalGap,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.all(
+                    Radius.circular(storyViewIndicatorConfig.borderRadius)),
+                child: LinearProgressIndicator(
+                  minHeight: storyViewIndicatorConfig.height,
+                  value: i == currentIndex ? currentItemAnimatedValue : 0,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      storyViewIndicatorConfig.activeColor),
+                  backgroundColor: i < currentIndex
+                      ? storyViewIndicatorConfig.backgroundCompletedColor
+                      : storyViewIndicatorConfig.backgroundDisabledColor,
                 ),
               ),
             ),
-          },
-        ],
-      ),
+          ),
+        },
+      ],
     );
   }
 }
