@@ -10,8 +10,7 @@ import '../utils/video_utils.dart';
 /// (network, file, asset) and optional thumbnail and error widgets.
 ///
 
-typedef OnVisibilityChanged = void Function(
-    VideoPlayerController? videoPlayer, bool isvisible);
+typedef OnVisibilityChanged = void Function(VideoPlayerController? videoPlayer, bool isvisible);
 
 class VideoStoryView extends StatefulWidget {
   /// Creates a [VideoStoryView] widget.
@@ -99,8 +98,7 @@ class _VideoStoryViewState extends State<VideoStoryView> {
 
   BoxFit get fit => config.fit ?? BoxFit.cover;
 
-  StoryViewVideoConfig get config =>
-      widget.storyItem.videoConfig ?? const StoryViewVideoConfig();
+  StoryViewVideoConfig get config => widget.storyItem.videoConfig ?? const StoryViewVideoConfig();
 
   @override
   void dispose() {
@@ -115,6 +113,7 @@ class _VideoStoryViewState extends State<VideoStoryView> {
 
   @override
   Widget build(BuildContext context) {
+    print("VideoStoryView build");
     return VisibilityDetector(
       key: UniqueKey(),
       onVisibilityChanged: (info) {
@@ -124,39 +123,74 @@ class _VideoStoryViewState extends State<VideoStoryView> {
           widget.onVisibilityChanged?.call(controller, false);
         }
       },
-      child: Stack(
-        alignment:
-            (fit == BoxFit.cover) ? Alignment.topCenter : Alignment.center,
-        fit: (fit == BoxFit.cover) ? StackFit.expand : StackFit.loose,
-        children: [
-          if (config.loadingWidget != null) ...{
-            config.loadingWidget!,
-          },
-          if (widget.storyItem.errorWidget != null && videoStatus.hasError) ...{
-            // Display the error widget if an error occurred.
-            widget.storyItem.errorWidget!,
-          },
-          if (videoStatus.isLive && controller != null) ...{
-            if (config.useVideoAspectRatio) ...{
-              // Display the video with aspect ratio if specified.
-              AspectRatio(
-                aspectRatio: controller!.value.aspectRatio,
+      child: Builder(builder: (context) {
+        if (videoStatus == VideoStatus.loading) {
+          return Align(
+            alignment: (fit == BoxFit.cover) ? Alignment.topCenter : Alignment.center,
+            child: config.loadingWidget ?? const SizedBox.shrink(),
+          );
+        }
+        if (videoStatus.hasError) {
+          return Align(
+            alignment: (fit == BoxFit.cover) ? Alignment.topCenter : Alignment.center,
+            child: widget.storyItem.errorWidget ?? const SizedBox.shrink(),
+          );
+        }
+        if (videoStatus.isLive && controller != null) {
+          if (config.useVideoAspectRatio) {
+            // Display the video with aspect ratio if specified.
+            return AspectRatio(
+              aspectRatio: controller!.value.aspectRatio,
+              child: VideoPlayer(controller!),
+            );
+          } else {
+            // Display the video fitted to the screen.
+            return FittedBox(
+              fit: config.fit ?? BoxFit.cover,
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: config.width ?? controller?.value.size.width,
+                height: config.height ?? controller?.value.size.height,
                 child: VideoPlayer(controller!),
-              )
-            } else ...{
-              // Display the video fitted to the screen.
-              FittedBox(
-                fit: config.fit ?? BoxFit.cover,
-                alignment: Alignment.center,
-                child: SizedBox(
+              ),
+            );
+          }
+        }
+        return const SizedBox.shrink();
+        return Stack(
+          alignment: (fit == BoxFit.cover) ? Alignment.topCenter : Alignment.center,
+          fit: (fit == BoxFit.cover) ? StackFit.expand : StackFit.loose,
+          children: [
+            if (config.loadingWidget != null && videoStatus == VideoStatus.loading) ...{
+              config.loadingWidget!,
+            },
+            if (widget.storyItem.errorWidget != null && videoStatus.hasError) ...{
+              // Display the error widget if an error occurred.
+              widget.storyItem.errorWidget!,
+            },
+            if (videoStatus.isLive && controller != null) ...{
+              if (config.useVideoAspectRatio) ...{
+                // Display the video with aspect ratio if specified.
+                AspectRatio(
+                  aspectRatio: controller!.value.aspectRatio,
+                  child: VideoPlayer(controller!),
+                )
+              } else ...{
+                // Display the video fitted to the screen.
+                FittedBox(
+                  fit: config.fit ?? BoxFit.cover,
+                  alignment: Alignment.center,
+                  child: SizedBox(
                     width: config.width ?? controller?.value.size.width,
                     height: config.height ?? controller?.value.size.height,
-                    child: VideoPlayer(controller!)),
-              )
-            },
-          }
-        ],
-      ),
+                    child: VideoPlayer(controller!),
+                  ),
+                )
+              },
+            }
+          ],
+        );
+      }),
     );
   }
 }

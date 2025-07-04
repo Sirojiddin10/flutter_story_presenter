@@ -415,6 +415,7 @@ class _StoryPresenterState extends State<StoryPresenter> with WidgetsBindingObse
   }
 
   Widget _buildContent(BuildContext context, int index, StoryItem item) {
+    print("buildContent ${item.storyItemType.name}");
     switch (item.storyItemType) {
       case StoryItemType.image:
         return ImageStoryView(
@@ -428,6 +429,7 @@ class _StoryPresenterState extends State<StoryPresenter> with WidgetsBindingObse
         );
 
       case StoryItemType.video:
+        print("build Video Content ");
         return VideoStoryView(
           storyItem: item,
           key: UniqueKey(),
