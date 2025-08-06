@@ -224,8 +224,7 @@ class _StoryPresenterState extends State<StoryPresenter> with WidgetsBindingObse
   }
 
   /// Returns the configuration for the story view indicator.
-  StoryViewIndicatorConfig get storyViewIndicatorConfig =>
-      widget.storyViewIndicatorConfig ?? const StoryViewIndicatorConfig();
+  StoryViewIndicatorConfig get storyViewIndicatorConfig => widget.storyViewIndicatorConfig ?? const StoryViewIndicatorConfig();
 
   void _forwardAnimation({double? from}) {
     if (_animationController.duration != null) {
@@ -338,8 +337,8 @@ class _StoryPresenterState extends State<StoryPresenter> with WidgetsBindingObse
         _currentVideoPlayer?.pause();
         _currentVideoPlayer?.seekTo(Duration.zero);
         _currentVideoPlayer = null;
-
         widget.onStoryChanged?.call(index);
+        setState(() {});
       },
       itemCount: widget.itemCount,
       itemBuilder: (context, index) {
@@ -390,7 +389,6 @@ class _StoryPresenterState extends State<StoryPresenter> with WidgetsBindingObse
                       ),
                     ),
                   },
-
                   if (item.description != null && item.description!.isNotEmpty && widget.descriptionBuilder != null) ...{
                     Positioned(
                       bottom: 12,
@@ -415,7 +413,6 @@ class _StoryPresenterState extends State<StoryPresenter> with WidgetsBindingObse
   }
 
   Widget _buildContent(BuildContext context, int index, StoryItem item) {
-    print("buildContent ${item.storyItemType.name}");
     switch (item.storyItemType) {
       case StoryItemType.image:
         return ImageStoryView(
@@ -429,7 +426,6 @@ class _StoryPresenterState extends State<StoryPresenter> with WidgetsBindingObse
         );
 
       case StoryItemType.video:
-        print("build Video Content ");
         return VideoStoryView(
           storyItem: item,
           key: UniqueKey(),
