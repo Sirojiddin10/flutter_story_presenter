@@ -115,7 +115,6 @@ class _ImageStoryViewState extends State<ImageStoryView> {
     child = CachedNetworkImage(
       imageUrl: widget.storyItem.url!,
       imageBuilder: (context, imageProvider) {
-        print('imageProvider: $imageProvider');
         // Mark the image as loaded once it is built.
         markImageAsLoaded();
         return Image(
