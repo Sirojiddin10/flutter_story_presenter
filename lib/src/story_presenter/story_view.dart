@@ -12,7 +12,6 @@ import '../story_presenter/image_story_view.dart';
 import '../story_presenter/story_view_indicator.dart';
 import '../story_presenter/text_story_view.dart';
 import '../story_presenter/video_story_view.dart';
-import '../story_presenter/web_story_view.dart';
 import '../utils/story_utils.dart';
 
 //! //! ***** NOTE ***** //! //!
@@ -459,22 +458,6 @@ class _StoryPresenterState extends State<StoryPresenter> with WidgetsBindingObse
             }
           },
         );
-
-      case StoryItemType.web:
-        return WebStoryView(
-          storyItem: item,
-          key: UniqueKey(),
-          onWebViewLoaded: (controller, loaded) {
-            if (loaded) {
-              _startStoryCountdown(item.duration);
-            }
-            item.webConfig?.onWebViewLoaded?.call(
-              controller,
-              loaded,
-            );
-          },
-        );
-
       case StoryItemType.custom:
         return StoryCustomWidgetWrapper(
           isAutoStart: true,

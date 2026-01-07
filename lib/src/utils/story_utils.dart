@@ -15,7 +15,6 @@ enum StoryItemType {
   image,
   video,
   text,
-  web,
   custom,
 }
 
@@ -32,8 +31,6 @@ extension StoryItemTypeExtensions on StoryItemType {
   bool get isVideo => this == StoryItemType.video;
 
   bool get isText => this == StoryItemType.text;
-
-  bool get isWeb => this == StoryItemType.web;
 
   bool get isCustom => this == StoryItemType.custom;
 }
